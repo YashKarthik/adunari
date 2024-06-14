@@ -1,15 +1,23 @@
 import re
-from _typeshed import FileDescriptorOrPath
-from typing import Literal
+from typing import Literal, Any
 
 class AssemblyParser:
-    def __init__(self, input_file: FileDescriptorOrPath):
-        self.input_file: FileDescriptorOrPath = input_file
+    def __init__(self, input_file: str):
+        self.input_file: str = input_file
         self.current_instr_idx: int = -1
-        self.current_instr: str | None
+        self.current_instr: str | None = None
+        self.instructions: list[str] = []
 
         with open(input_file) as f:
-            self.instructions = f.readlines()
+            for instr in f:
+                if instr[:2] == "//":
+                    continue
+
+                instr = instr.replace(" ", "").replace("\n", "").replace("\t", "")
+                if instr == "":
+                    continue
+
+                self.instructions.append(instr)
 
     def has_more_instr(self) -> bool:
         return True if (self.current_instr_idx + 1) < len(self.instructions) else False
@@ -48,8 +56,8 @@ class AssemblyParser:
         if not self.curr_instr_type() == "C":
             raise ValueError("Destination does not exist for non-C instructions.")
 
-        dest: str = re.findall(r'\w+(?==)', self.current_instr)[0]
-        return dest if len(dest) > 0 else None
+        dest: list[Any] = re.findall(r'\w+(?==)', self.current_instr)
+        return dest[0] if len(dest) > 0 else None
 
     def get_comp(self):
         if not self.current_instr:
@@ -57,8 +65,8 @@ class AssemblyParser:
         if not self.curr_instr_type() == "C":
             raise ValueError("Comp does not exist for non-C instructions.")
 
-        dest: str = re.findall(r'(?<=\D=).+(?=;)', self.current_instr)[0]
-        return dest if len(dest) > 0 else None
+        comp: list[Any] = re.findall(r'(?<=\S=)[^;]+', self.current_instr)
+        return comp[0] if len(comp) > 0 else None
 
     def get_jump(self):
         if not self.current_instr:
@@ -66,5 +74,5 @@ class AssemblyParser:
         if not self.curr_instr_type() == "C":
             raise ValueError("Jump does not exist for non-C instructions.")
 
-        dest: str = re.findall(r'(?<=;)\w+', self.current_instr)[0]
-        return dest if len(dest) > 0 else None
+        jump: list[Any] = re.findall(r'(?<=;)\S+', self.current_instr)
+        return jump[0] if len(jump) > 0 else None
