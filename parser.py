@@ -56,8 +56,8 @@ class AssemblyParser:
         if not self.curr_instr_type() == "C":
             raise ValueError("Destination does not exist for non-C instructions.")
 
-        dest: list[Any] = re.findall(r'\w+(?==)', self.current_instr)
-        return dest[0] if len(dest) > 0 else None
+        eq_idx = self.current_instr.find("=")
+        return self.current_instr[:eq_idx] if eq_idx > 0 else None
 
     def get_comp(self):
         if not self.current_instr:
@@ -65,8 +65,9 @@ class AssemblyParser:
         if not self.curr_instr_type() == "C":
             raise ValueError("Comp does not exist for non-C instructions.")
 
-        comp: list[Any] = re.findall(r'(?<=\S=)[^;]+', self.current_instr)
-        return comp[0] if len(comp) > 0 else None
+        eq_idx = self.current_instr.find("=")
+        colon_idx = self.current_instr.find(";")
+        return self.current_instr[max(0, eq_idx+1): colon_idx if colon_idx != -1 else None]
 
     def get_jump(self):
         if not self.current_instr:
@@ -74,5 +75,5 @@ class AssemblyParser:
         if not self.curr_instr_type() == "C":
             raise ValueError("Jump does not exist for non-C instructions.")
 
-        jump: list[Any] = re.findall(r'(?<=;)\S+', self.current_instr)
-        return jump[0] if len(jump) > 0 else None
+        colon_idx = self.current_instr.find(";")
+        return self.current_instr[colon_idx+1:] if colon_idx > 0 else None
