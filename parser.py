@@ -1,5 +1,5 @@
 import re
-from typing import Literal, Any
+from typing import Literal
 
 class AssemblyParser:
     def __init__(self, input_file: str):
