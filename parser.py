@@ -1,4 +1,3 @@
-import re
 from typing import Literal
 
 class AssemblyParser:
@@ -10,10 +9,10 @@ class AssemblyParser:
 
         with open(input_file) as f:
             for instr in f:
+                instr = instr.replace(" ", "").replace("\n", "").replace("\t", "")
                 if instr[:2] == "//":
                     continue
 
-                instr = instr.replace(" ", "").replace("\n", "").replace("\t", "")
                 if instr == "":
                     continue
 
@@ -39,14 +38,16 @@ class AssemblyParser:
             return "L"
         return "C"
 
-    def get_symbol_value(self) -> int:
+    def get_symbol_value(self) -> str:
         if not self.current_instr:
             raise ValueError("Current instruction not loaded.")
 
         if self.curr_instr_type() == "A":
-            return int(self.current_instr[1:])
+            return self.current_instr[1:]
         elif self.curr_instr_type() == "L":
-            return int(re.findall(r'\d+', self.current_instr)[0])
+            start = self.current_instr.find("(") + 1 #)
+            end = self.current_instr.find(")")
+            return self.current_instr[start:end]
 
         raise ValueError("Current instruction of type C, expected A or L")
 
